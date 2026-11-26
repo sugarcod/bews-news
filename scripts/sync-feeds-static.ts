@@ -62,7 +62,7 @@ for (const r of results) {
   console.log(`[sync] ${r.source.id.padEnd(15)} ${r.source.lang} ${String(r.items.length).padStart(3)}${r.error ? `  ERROR ${r.error}` : ''}`);
   for (const it of r.items) {
     const old = byUrl.get(it.url);
-    if (!previousUrls.has(it.url) && !seenUrls.has(it.url)) fresh++;
+    if (!previousUrls.has(it.url) && !seenUrls.has(it.url) && it.publishedAt >= Date.now() - KEEP_DAYS * 86400_000) fresh++;
     seenUrls.add(it.url);
     if (it.rssContent) rssContent.set(it.url, it.rssContent);
     byUrl.set(it.url, {

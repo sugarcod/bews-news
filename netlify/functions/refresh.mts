@@ -9,7 +9,8 @@ export default async () => {
   const [{ articles: base }, results] = await Promise.all([loadArticles(), fetchAllFeeds(SOURCES, 7000)]);
   const live = feedResultsToArticles(results);
   const known = new Set(base.map((a) => a.url));
-  const newArticles = new Set(live.filter((a) => !known.has(a.url)).map((a) => a.url)).size;
+  const recent = Date.now() - 14 * 86400_000;
+  const newArticles = new Set(live.filter((a) => !known.has(a.url) && a.publishedAt >= recent).map((a) => a.url)).size;
   rememberLive(live);
   const merged = mergeArticles(base, live);
   const cutoff = Date.now() - 30 * 86400_000;
