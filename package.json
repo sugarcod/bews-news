@@ -1,0 +1,45 @@
+{
+  "name": "bews-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "bews news — EN/HE news wire with on-demand Russian translation and vocabulary",
+  "scripts": {
+    "dev:client": "vite",
+    "dev:server": "node --watch src/server/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
+    "build": "npm run typecheck && vite build && node scripts/icons.mjs --check",
+    "start": "NODE_ENV=production node src/server/index.ts",
+    "icons": "node scripts/icons.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "build:netlify": "npm run typecheck && VITE_STATIC=1 vite build --outDir dist-netlify && node scripts/icons.mjs --check",
+    "sync:static": "node scripts/sync-feeds-static.ts --out data-branch",
+    "deploy": "npm run build:netlify && netlify deploy --prod --dir dist-netlify --functions netlify/functions"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "express": "^5.3.0",
+    "linkedom": "^0.18.15",
+    "lucide-react": "^1.81.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^6.1.2",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.11",
+    "@types/react": "^19.3.3",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "autoprefixer": "^10.7.0",
+    "playwright-core": "^1.65.1",
+    "postcss": "^8.5.33",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^7.0.2",
+    "vite": "^8.4.0"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

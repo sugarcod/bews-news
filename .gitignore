@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-netlify
+data-branch
+data/*.db*
+logs
+.env
+.netlify
+*.log

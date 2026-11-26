@@ -1,0 +1,51 @@
+name: Sync RSS → data branch
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # every hour
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-rss
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install runtime dependencies
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+
+      - name: Load previous data (keeps older stories + extracted full texts)
+        run: |
+          if git fetch --depth=1 origin data 2>/dev/null; then
+            git show FETCH_HEAD:articles.json > /tmp/prev-articles.json || true
+          fi
+
+      - name: Fetch 13 feeds, classify, extract full text
+        run: node scripts/sync-feeds-static.ts --out data-branch --existing /tmp/prev-articles.json
+
+      - name: Publish to the data branch (single orphan commit)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd data-branch
+          printf '# bews news data\n\nAuto-generated hourly by `.github/workflows/sync-rss.yml` on `main`. Do not edit.\n' > README.md
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "data: $(jq -r '"\(.counts.all) articles (EN \(.counts.en) / HE \(.counts.he))"' meta.json) @ $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
+          cat meta.json | jq '.counts'

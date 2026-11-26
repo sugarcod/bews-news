@@ -1,0 +1,33 @@
+# Deployed with the Netlify CLI from a local build (no Netlify build minutes):
+#   npm run deploy
+[build]
+  command = "npm run build:netlify"
+  publish = "dist-netlify"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# /api/* is served by the functions in netlify/functions (each declares its
+# route via `config.path`: /api/articles, /api/articles/:id, /api/translate,
+# /api/refresh, /api/sources, /api/stats). Function routes take precedence
+# over the SPA fallback below.
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Content-Type = "application/manifest+json"
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
