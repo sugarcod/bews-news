@@ -6,6 +6,7 @@ import { api, translateMemo } from '../api.ts';
 import { TOPIC_COLORS } from '../logic.ts';
 import { buildParagraphs, normWord, type Sentence } from '../tokenize.ts';
 import { CircleButton, LangBadge, Overlay, SourceIcon, Spinner, cx } from '../components/ui.tsx';
+import { SpeakButton } from '../components/SpeakButton.tsx';
 
 type TState = { status: 'loading' } | { status: 'done'; r: TranslateResult } | { status: 'error' };
 
@@ -178,13 +179,16 @@ export function Reader({ summary, source, vocabWords, onClose, onBookmark, onVoc
           <h1 dir={dir} lang={lang} className={cx('text-[25px] font-extrabold leading-[1.22] tracking-[-0.015em] text-ink', he && 'font-he text-right text-[27px]')}>
             {a.title}
           </h1>
+          <div className="mt-2.5 flex items-center gap-2">
           <button
             type="button"
             onClick={() => toggleSentence(headlineKey, a.title)}
-            className={cx('mt-2.5 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] font-semibold transition', open.has(headlineKey) ? 'border-brand bg-brand-soft text-brand' : 'border-line bg-white text-muted hover:border-brand hover:text-brand')}
+            className={cx('inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-semibold transition', open.has(headlineKey) ? 'border-brand bg-brand-soft text-brand' : 'border-line bg-white text-muted hover:border-brand hover:text-brand')}
           >
             <Languages size={14} /> {open.has(headlineKey) ? t('hideTranslation') : t('translateHeadline')}
           </button>
+          <SpeakButton text={a.title} lang={lang} size="sm" labelKey="listenHeadline" />
+          </div>
           {open.has(headlineKey) && <TranslationBlock state={tr[headlineKey]} big onRetry={() => translateKey(headlineKey, a.title)} />}
 
           {a.image && (
@@ -239,6 +243,7 @@ export function Reader({ summary, source, vocabWords, onClose, onBookmark, onVoc
                     onToggle={toggleSentence}
                     onRetry={translateKey}
                     label={t('translateSentence')}
+                    lang={lang}
                   />
                 );
               })}
@@ -265,10 +270,10 @@ export function Reader({ summary, source, vocabWords, onClose, onBookmark, onVoc
 }
 
 const SentenceView = memo(function SentenceView({
-  k, s, isOpen, state, activeToken, vocabWords, onToggle, onRetry, label,
+  k, s, isOpen, state, activeToken, vocabWords, onToggle, onRetry, label, lang,
 }: {
   k: string; s: Sentence; isOpen: boolean; state?: TState; activeToken: string | null; vocabWords: Set<string>;
-  onToggle: (k: string, text: string) => void; onRetry: (k: string, text: string) => void; label: string;
+  onToggle: (k: string, text: string) => void; onRetry: (k: string, text: string) => void; label: string; lang: NewsLang;
 }) {
   return (
     <>
@@ -292,9 +297,10 @@ const SentenceView = memo(function SentenceView({
         onClick={(e) => { e.stopPropagation(); onToggle(k, s.text); }}
         aria-label={label}
         title={label}
-        className={cx('sent-btn mx-1 inline-flex translate-y-[-2px] select-none items-center rounded-full border px-1.5 py-[1px] align-middle text-[10px] font-bold leading-[14px] tracking-wide transition', isOpen ? 'border-brand bg-brand text-white' : 'border-line bg-white text-muted hover:border-brand hover:text-brand')}
+        className={cx('sent-btn ms-1 me-0.5 inline-flex translate-y-[-2px] select-none items-center rounded-full border px-1.5 py-[1px] align-middle text-[10px] font-bold leading-[14px] tracking-wide transition', isOpen ? 'border-brand bg-brand text-white' : 'border-line bg-white text-muted hover:border-brand hover:text-brand')}
         dir="ltr"
       />
+      <SpeakButton text={s.text.trim()} lang={lang} size="xs" labelKey="listenSentence" className="me-1 translate-y-[-2px]" />
       {isOpen && <TranslationBlock state={state} onRetry={() => onRetry(k, s.text)} />}
     </>
   );
@@ -365,7 +371,8 @@ function WordSheet({ pop, lang, article, saved, onClose, onAdded }: { pop: Popov
               {display}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-track text-muted hover:text-ink" aria-label="Close"><X size={18} /></button>
+          <SpeakButton text={display} lang={lang} size="md" labelKey="listenWord" />
+                    <button type="button" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-track text-muted hover:text-ink" aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="mt-2.5 min-h-[44px] rounded-2xl bg-tint px-4 py-2.5">

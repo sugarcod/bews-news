@@ -3,6 +3,7 @@ import { BookOpen, Download, ExternalLink, Search, Trash2 } from 'lucide-react';
 import type { VocabEntry } from '../../shared/types.ts';
 import { useI18n } from '../i18n.ts';
 import { api } from '../api.ts';
+import { SpeakButton } from '../components/SpeakButton.tsx';
 import { PageHeader } from '../components/Chrome.tsx';
 import { EmptyState, LangBadge, Segmented, cx } from '../components/ui.tsx';
 
@@ -74,6 +75,7 @@ export function VocabScreen({ vocab, onDelete, onOpenArticle }: Props) {
                     <p dir={he ? 'rtl' : 'ltr'} lang={v.lang} className={cx('mt-1.5 break-words text-[21px] font-extrabold leading-tight text-ink', he && 'font-he text-right')}>{v.word}</p>
                     <p lang="ru" className="mt-1 text-[16.5px] font-semibold leading-snug text-brand-dark">{v.translation}</p>
                   </div>
+                  <SpeakButton text={v.word} lang={v.lang} size="sm" labelKey="listenWord" />
                   <button type="button" onClick={() => onDelete(v.id)} aria-label={t('delete')} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#a39b91] transition hover:bg-brand-soft hover:text-brand">
                     <Trash2 size={17} />
                   </button>

@@ -60,3 +60,10 @@ Every word/sentence translation is cached in SQLite keyed by
   browser's `localStorage`; the local Express build keeps them in SQLite.
 - Deploy from your machine: `npm run deploy` (builds `dist-netlify/`, bundles functions, `netlify deploy --prod`).
 - Optional Netlify env vars: `GOOGLE_WEB_KEY`, `AZURE_TRANSLATOR_KEY`, `GOOGLE_TRANSLATE_API_KEY`, `DEEPL_API_KEY`.
+
+## Text-to-speech (on demand)
+Tap 🔊 next to a headline, sentence, word/phrase or vocabulary card. Audio is synthesized only then
+(`GET /api/tts?lang=en|he&text=…` → `audio/mpeg`, header `X-TTS-Provider`), cached in the browser's
+Cache API (`bews-tts-v1`), and falls back to `speechSynthesis` when offline.
+Provider chain (`src/lib/tts-providers.ts`): Azure Speech (`AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION`)
+→ Microsoft Edge neural voices (`en-US-AriaNeural`, `he-IL-HilaNeural`, free) → Google Translate TTS (chunked).

@@ -9,6 +9,7 @@ import { refreshAll, startScheduler, isRefreshing, getLastRefreshAt, getNextRefr
 import { getArticle, expireSummaryFallbacks } from './extract.ts';
 import { cachedTranslate } from './translate-cache.ts';
 import { providerInfo } from '../lib/translator.ts';
+import { synthesize, MAX_TTS_CHARS, type TtsLang } from '../lib/tts-providers.ts';
 import type { ArticleSummary, NewsLang, Stats, Topic, VocabEntry } from '../shared/types.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -102,6 +103,26 @@ app.get('/api/translate', h(async (req, res) => {
     res.json(await cachedTranslate(text, source, String(req.query.target || 'ru')));
   } catch (e) {
     res.status(502).json({ error: 'translation_failed', detail: e instanceof Error ? e.message : String(e) });
+  }
+}));
+
+// ---------------------------------------------------------------- text-to-speech (on demand)
+app.all('/api/tts', h(async (req, res) => {
+  const src = req.method === 'POST' ? req.body || {} : req.query;
+  const text = String(src.text ?? src.q ?? '').replace(/\s+/g, ' ').trim();
+  const lang = (src.lang === 'he' ? 'he' : src.lang === 'en' ? 'en' : null) as TtsLang | null;
+  if (!text) return res.status(400).json({ error: 'text_required' });
+  if (!lang) return res.status(400).json({ error: 'lang_must_be_en_or_he' });
+  if (text.length > MAX_TTS_CHARS) return res.status(413).json({ error: 'text_too_long' });
+  try {
+    const r = await synthesize(text, lang);
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('X-TTS-Provider', r.provider);
+    res.setHeader('Access-Control-Expose-Headers', 'X-TTS-Provider');
+    res.send(Buffer.from(r.audio));
+  } catch (e) {
+    res.status(502).json({ error: 'tts_failed', detail: e instanceof Error ? e.message : String(e) });
   }
 }));
 

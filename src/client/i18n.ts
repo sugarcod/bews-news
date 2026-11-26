@@ -46,6 +46,7 @@ const en = {
   provider: 'Translation provider', providerActive: 'Active', providerFallbacks: 'Fallbacks', providerHint: 'Set AZURE_TRANSLATOR_KEY, GOOGLE_TRANSLATE_API_KEY or DEEPL_API_KEY on the server to switch to an official API.',
   feedsStatus: 'Newsrooms status', about: 'bews news — EN/HE news wire with Russian translation on tap.', inMin: 'in {n} min',
   justNow: 'now', ago: 'ago',
+  listen: 'Listen', stopAudio: 'Stop', loadingAudio: 'Loading audio…', listenHeadline: 'Listen to the headline', listenSentence: 'Listen to the sentence', listenWord: 'Listen',
 };
 
 type Dict = typeof en;
@@ -87,6 +88,7 @@ const ru: Dict = {
   provider: 'Сервис перевода', providerActive: 'Активный', providerFallbacks: 'Резервные', providerHint: 'Чтобы перейти на официальный API, задайте на сервере AZURE_TRANSLATOR_KEY, GOOGLE_TRANSLATE_API_KEY или DEEPL_API_KEY.',
   feedsStatus: 'Состояние редакций', about: 'bews news — лента новостей на английском и иврите с переводом на русский по нажатию.', inMin: 'через {n} мин',
   justNow: 'сейчас', ago: 'назад',
+  listen: 'Прослушать', stopAudio: 'Остановить', loadingAudio: 'Загружаем аудио…', listenHeadline: 'Прослушать заголовок', listenSentence: 'Прослушать предложение', listenWord: 'Прослушать',
 };
 
 export const DICTS: Record<UiLang, Dict> = { en, ru };

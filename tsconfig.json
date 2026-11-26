@@ -14,5 +14,5 @@
     "noUnusedLocals": true,
     "types": ["vite/client"]
   },
-  "include": ["src/client", "src/shared"]
+  "include": ["src/client", "src/shared", "src/lib/tts.ts"]
 }
