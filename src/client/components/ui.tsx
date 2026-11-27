@@ -93,7 +93,7 @@ export function Overlay({ children, onClose, z = 40 }: { children: ReactNode; on
   }, [onClose]);
   return (
     <div className="fixed inset-0 flex justify-center bg-black/10" style={{ zIndex: z }}>
-      <div className="slide-in flex h-full w-full max-w-[720px] flex-col overflow-hidden bg-cream md:border-x md:border-line">{children}</div>
+      <div className="slide-in relative flex h-full w-full max-w-[720px] flex-col overflow-hidden bg-cream md:border-x md:border-line">{children}</div>
     </div>
   );
 }

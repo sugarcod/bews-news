@@ -47,6 +47,9 @@ const en = {
   feedsStatus: 'Newsrooms status', about: 'bews news — EN/HE news wire with Russian translation on tap.', inMin: 'in {n} min',
   justNow: 'now', ago: 'ago',
   listen: 'Listen', stopAudio: 'Stop', loadingAudio: 'Loading audio…', listenHeadline: 'Listen to the headline', listenSentence: 'Listen to the sentence', listenWord: 'Listen',
+  listenArticle: 'Listen to article', pauseAudio: 'Pause', resumeAudio: 'Resume', stopArticle: 'Stop', nowReading: 'Reading aloud', prevSentence: 'Previous sentence', nextSentence: 'Next sentence',
+  footerTagline: 'English & Hebrew news with instant translation & audio', footerSources: '{n} newsrooms', footerAuto: 'auto-update every {n} min', footerAutoHour: 'auto-update hourly',
+  backToTop: 'Back to top', footerSource: 'Source code', footerNote: 'Headlines and texts belong to their publishers. Translations by machine.',
 };
 
 type Dict = typeof en;
@@ -89,6 +92,9 @@ const ru: Dict = {
   feedsStatus: 'Состояние редакций', about: 'bews news — лента новостей на английском и иврите с переводом на русский по нажатию.', inMin: 'через {n} мин',
   justNow: 'сейчас', ago: 'назад',
   listen: 'Прослушать', stopAudio: 'Остановить', loadingAudio: 'Загружаем аудио…', listenHeadline: 'Прослушать заголовок', listenSentence: 'Прослушать предложение', listenWord: 'Прослушать',
+  listenArticle: 'Озвучить статью', pauseAudio: 'Пауза', resumeAudio: 'Продолжить', stopArticle: 'Стоп', nowReading: 'Озвучиваем', prevSentence: 'Предыдущее предложение', nextSentence: 'Следующее предложение',
+  footerTagline: 'Новости на английском и иврите с переводом и озвучкой', footerSources: '{n} редакций', footerAuto: 'автообновление каждые {n} мин', footerAutoHour: 'автообновление каждый час',
+  backToTop: 'Наверх', footerSource: 'Исходный код', footerNote: 'Заголовки и тексты принадлежат их редакциям. Перевод — машинный.',
 };
 
 export const DICTS: Record<UiLang, Dict> = { en, ru };

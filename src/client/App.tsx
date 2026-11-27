@@ -12,6 +12,7 @@ import { Reader } from './screens/Reader.tsx';
 import { VocabScreen } from './screens/Vocab.tsx';
 import { SavedScreen } from './screens/Saved.tsx';
 import { SettingsScreen } from './screens/Settings.tsx';
+import { Footer } from './components/Footer.tsx';
 
 // ---------------------------------------------------------------- hash router
 // #/<tab>[/filter|/search|/a/<articleId>]...  — real history entries, so the
@@ -159,6 +160,7 @@ export default function App() {
         {route.tab === 'vocab' && <VocabScreen vocab={vocab} onDelete={deleteVocab} onOpenArticle={(id) => pushLayer({ kind: 'article', id })} />}
         {route.tab === 'saved' && <SavedScreen items={bookmarks} sources={srcMap} onOpen={openArticle} onBookmark={toggleBookmark} />}
         {route.tab === 'settings' && <SettingsScreen sources={sources} refreshing={refreshing} onRefresh={refresh} version={version} />}
+        <Footer onTab={setTab} sourceCount={sources.length || undefined} />
       </div>
 
       <BottomNav tab={route.tab} onTab={setTab} vocabCount={vocab.length} />

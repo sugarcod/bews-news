@@ -145,3 +145,4 @@ export const TOPIC_COLORS: Record<Topic, string> = {
 };
 
 export const isHebrew = (s: string) => /[\u0590-\u05FF]/.test(s);
+export const SOURCE_COUNT = 13;

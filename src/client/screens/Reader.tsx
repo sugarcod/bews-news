@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Bookmark, Check, ChevronLeft, ExternalLink, Languages, Plus, X, Info, RotateCw } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ExternalLink, Languages, Plus, X, Info, RotateCw, Headphones, Pause, Play, Square, SkipBack, SkipForward } from 'lucide-react';
 import type { ArticleFull, ArticleSummary, NewsLang, SourceInfo, TranslateResult } from '../../shared/types.ts';
 import { useI18n } from '../i18n.ts';
 import { api, translateMemo } from '../api.ts';
@@ -7,6 +7,8 @@ import { TOPIC_COLORS } from '../logic.ts';
 import { buildParagraphs, normWord, type Sentence } from '../tokenize.ts';
 import { CircleButton, LangBadge, Overlay, SourceIcon, Spinner, cx } from '../components/ui.tsx';
 import { SpeakButton } from '../components/SpeakButton.tsx';
+import { Footer } from '../components/Footer.tsx';
+import { pauseSequence, resumeSequence, seekSequence, startSequence, stopSpeaking, useSequence, type SeqItem, type SeqState } from '../../lib/tts.ts';
 
 type TState = { status: 'loading' } | { status: 'done'; r: TranslateResult } | { status: 'error' };
 
@@ -144,6 +146,33 @@ export function Reader({ summary, source, vocabWords, onClose, onBookmark, onVoc
   const bookmarked = !!a.bookmarked;
   const headlineKey = 'title';
 
+  // --- full-article read-aloud ---
+  const seqItems = useMemo<SeqItem[]>(() => {
+    const items: SeqItem[] = [{ id: headlineKey, text: a.title.trim(), lang }];
+    paragraphs.forEach((p, pi) => p.forEach((s, si) => { const text = s.text.trim(); if (/[\p{L}\p{N}]/u.test(text)) items.push({ id: `${pi}-${si}`, text, lang }); }));
+    return items.filter((x) => x.text);
+  }, [a.title, paragraphs, lang]);
+  const seq = useSequence();
+  const mine = seq.owner === summary.id && seq.status !== 'idle';
+  const speakingId = mine ? seq.itemId : null;
+  const listenAll = () => {
+    if (!mine) startSequence(summary.id, seqItems);
+    else if (seq.status === 'paused') resumeSequence();
+    else pauseSequence();
+  };
+  // stop any audio when the reader closes
+  useEffect(() => () => stopSpeaking(), []);
+  // keep the spoken sentence in view (above the mini-player)
+  useEffect(() => {
+    if (!speakingId) return;
+    const scroller = document.getElementById('reader-scroll');
+    const el = scroller?.querySelector(speakingId === headlineKey ? '[data-head]' : `[data-s="${speakingId}"]`);
+    if (!scroller || !(el instanceof HTMLElement)) return;
+    const r = el.getBoundingClientRect();
+    const box = scroller.getBoundingClientRect();
+    if (r.top < box.top + 8 || r.bottom > box.bottom - 110) scroller.scrollBy({ top: r.top - box.top - box.height * 0.3, behavior: 'smooth' });
+  }, [speakingId]);
+
   return (
     <Overlay onClose={pop ? () => setPop(null) : onClose}>
       <header className="flex items-center gap-3 border-b border-line/70 bg-cream/95 px-4 py-2.5 backdrop-blur">
@@ -176,7 +205,7 @@ export function Reader({ summary, source, vocabWords, onClose, onBookmark, onVoc
             <span>· {rel(a.publishedAt)}</span>
           </div>
 
-          <h1 dir={dir} lang={lang} className={cx('text-[25px] font-extrabold leading-[1.22] tracking-[-0.015em] text-ink', he && 'font-he text-right text-[27px]')}>
+          <h1 data-head dir={dir} lang={lang} className={cx('text-[25px] font-extrabold leading-[1.22] tracking-[-0.015em] text-ink transition-colors', he && 'font-he text-right text-[27px]', speakingId === headlineKey && 'head-speaking')}>
             {a.title}
           </h1>
           <div className="mt-2.5 flex items-center gap-2">
@@ -200,14 +229,24 @@ export function Reader({ summary, source, vocabWords, onClose, onBookmark, onVoc
             <span>{t('readerHint')}</span>
           </div>
 
-          {article && sentenceCount > 1 && (
-            <div className="mt-4 flex items-center justify-between gap-2">
-              <span className="text-[12px] text-muted">
+          {article && (
+            <div className="mt-4">
+              <p className="text-[12px] text-muted">
                 {article.extraction === 'summary' ? t('extractedSummary') : article.extraction === 'rss-content' ? t('extractedRss') : t('extractedReadability')}
-              </span>
-              <button type="button" onClick={translateAll} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-3.5 py-1.5 text-[12.5px] font-semibold text-white hover:bg-black">
-                <Languages size={14} /> {allOpen ? t('hideAll') : t('translateAll')}
-              </button>
+              </p>
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                {sentenceCount > 1 && (
+                  <button type="button" onClick={translateAll} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-ink px-3.5 text-[13px] font-semibold text-white hover:bg-black">
+                    <Languages size={15} /> {allOpen ? t('hideAll') : t('translateAll')}
+                  </button>
+                )}
+                <ListenAllButton seq={mine ? seq : null} onClick={listenAll} />
+                {mine && (
+                  <button type="button" onClick={stopSpeaking} aria-label={t('stopArticle')} title={t('stopArticle')} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-white text-ink hover:border-brand hover:text-brand">
+                    <Square size={13} fill="currentColor" strokeWidth={0} />
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -244,13 +283,17 @@ export function Reader({ summary, source, vocabWords, onClose, onBookmark, onVoc
                     onRetry={translateKey}
                     label={t('translateSentence')}
                     lang={lang}
+                    speaking={speakingId === key}
                   />
                 );
               })}
             </p>
           ))}
         </div>
+        {article && <Footer scrollEl={() => document.getElementById('reader-scroll')} className="mx-0 mt-6" />}
       </div>
+
+      {mine && !pop && <MiniPlayer seq={seq} lang={lang} />}
 
       {pop && (
         <WordSheet
@@ -270,14 +313,14 @@ export function Reader({ summary, source, vocabWords, onClose, onBookmark, onVoc
 }
 
 const SentenceView = memo(function SentenceView({
-  k, s, isOpen, state, activeToken, vocabWords, onToggle, onRetry, label, lang,
+  k, s, isOpen, state, activeToken, vocabWords, onToggle, onRetry, label, lang, speaking,
 }: {
   k: string; s: Sentence; isOpen: boolean; state?: TState; activeToken: string | null; vocabWords: Set<string>;
-  onToggle: (k: string, text: string) => void; onRetry: (k: string, text: string) => void; label: string; lang: NewsLang;
+  onToggle: (k: string, text: string) => void; onRetry: (k: string, text: string) => void; label: string; lang: NewsLang; speaking?: boolean;
 }) {
   return (
     <>
-      <span data-s={k} data-text={s.text.trim()} className={cx('sentence rounded-[3px] transition-colors', isOpen && 'bg-[#F6E9DF]')}>
+      <span data-s={k} data-text={s.text.trim()} className={cx('sentence rounded-[3px] transition-colors', isOpen && 'bg-[#F6E9DF]', speaking && 'sent-speaking')}>
         {s.tokens.map((tok, ti) =>
           tok.word ? (
             <span
@@ -425,5 +468,71 @@ function Highlight({ text, term }: { text: string; term: string }) {
       <mark className="rounded bg-brand-soft px-0.5 font-semibold text-brand">{text.slice(i, i + term.length)}</mark>
       {text.slice(i + term.length)}
     </>
+  );
+}
+
+function ListenAllButton({ seq, onClick }: { seq: SeqState | null; onClick: () => void }) {
+  const { t } = useI18n();
+  const progress = seq ? `${seq.index + 1} / ${seq.total}` : '';
+  const label = !seq ? t('listenArticle') : seq.status === 'paused' ? t('resumeAudio') : t('pauseAudio');
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={seq ? `${label} · ${progress}` : label}
+      aria-pressed={!!seq && seq.status !== 'paused'}
+      className={cx(
+        'relative inline-flex h-9 shrink-0 items-center gap-1.5 overflow-hidden rounded-full border px-3.5 text-[13px] font-semibold transition active:scale-[0.97]',
+        seq ? 'border-brand bg-brand text-white shadow-[0_4px_12px_-5px_rgba(162,53,38,0.7)]' : 'border-brand/60 bg-brand-soft text-brand hover:border-brand',
+      )}
+    >
+      {seq && <span className="absolute inset-y-0 left-0 bg-white/15 transition-[width] duration-500" style={{ width: `${((seq.index + 1) / seq.total) * 100}%` }} />}
+      <span className="relative inline-flex items-center gap-1.5">
+        {!seq ? <Headphones size={15} strokeWidth={2.3} /> : seq.status === 'loading' ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-r-transparent" /> : seq.status === 'paused' ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
+        {label}
+        {seq && <span className="tabular-nums opacity-85" dir="ltr">{progress}</span>}
+      </span>
+    </button>
+  );
+}
+
+function MiniPlayer({ seq, lang }: { seq: SeqState; lang: NewsLang }) {
+  const { t } = useI18n();
+  const he = lang === 'he';
+  const btn = 'grid h-9 w-9 shrink-0 place-items-center rounded-full transition active:scale-95';
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+      <div className="toast-in pointer-events-auto w-full max-w-[560px] overflow-hidden rounded-2xl border border-line bg-white/95 shadow-[0_10px_30px_-12px_rgba(60,35,20,0.45)] backdrop-blur" role="region" aria-label={t('nowReading')}>
+        <div className="h-[3px] bg-stone-track">
+          <div className="h-full bg-brand transition-[width] duration-500" style={{ width: `${((seq.index + 1) / seq.total) * 100}%` }} />
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2">
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-brand">
+              <Headphones size={12} strokeWidth={2.6} /> {t('nowReading')} <span className="tabular-nums text-muted" dir="ltr">{seq.index + 1} / {seq.total}</span>
+            </p>
+            <p dir={he ? 'rtl' : 'ltr'} className={cx('truncate text-[13.5px] text-ink', he && 'font-he text-right')}>{seq.text}</p>
+          </div>
+          <button type="button" onClick={() => seekSequence(seq.index - 1)} disabled={seq.index === 0} aria-label={t('prevSentence')} title={t('prevSentence')} className={cx(btn, 'text-muted hover:text-brand disabled:opacity-35')}>
+            <SkipBack size={16} fill="currentColor" />
+          </button>
+          <button
+            type="button"
+            onClick={() => (seq.status === 'paused' ? resumeSequence() : pauseSequence())}
+            aria-label={seq.status === 'paused' ? t('resumeAudio') : t('pauseAudio')}
+            title={seq.status === 'paused' ? t('resumeAudio') : t('pauseAudio')}
+            className={cx(btn, 'h-10 w-10 bg-brand text-white shadow-[0_4px_12px_-5px_rgba(162,53,38,0.8)]')}
+          >
+            {seq.status === 'loading' ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" /> : seq.status === 'paused' ? <Play size={17} fill="currentColor" /> : <Pause size={17} fill="currentColor" />}
+          </button>
+          <button type="button" onClick={() => seekSequence(seq.index + 1)} disabled={seq.index >= seq.total - 1} aria-label={t('nextSentence')} title={t('nextSentence')} className={cx(btn, 'text-muted hover:text-brand disabled:opacity-35')}>
+            <SkipForward size={16} fill="currentColor" />
+          </button>
+          <button type="button" onClick={stopSpeaking} aria-label={t('stopArticle')} title={t('stopArticle')} className={cx(btn, 'border border-line text-ink hover:border-brand hover:text-brand')}>
+            <Square size={12} fill="currentColor" strokeWidth={0} />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
