@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "updatedAt": 1795877395869,
+  "durationMs": 7991,
+  "counts": {
+    "all": 793,
+    "en": 477,
+    "he": 316,
+    "extracted": 719
+  },
+  "sources": [
+    {
+      "id": "toi",
+      "count": 0,
+      "fetchedAt": 1795877395869,
+      "error": "HTTP 403"
+    },
+    {
+      "id": "ynetnews",
+      "count": 30,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "jpost",
+      "count": 25,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "globes-en",
+      "count": 60,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "bbc-world",
+      "count": 24,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "bbc-business",
+      "count": 51,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "guardian-world",
+      "count": 45,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "techcrunch",
+      "count": 20,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "ynet",
+      "count": 30,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "maariv",
+      "count": 20,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "srugim",
+      "count": 50,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "geektime",
+      "count": 30,
+      "fetchedAt": 1795877395869,
+      "error": null
+    },
+    {
+      "id": "globes-he",
+      "count": 15,
+      "fetchedAt": 1795877395869,
+      "error": null
+    }
+  ]
+}
